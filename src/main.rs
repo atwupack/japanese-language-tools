@@ -6,9 +6,16 @@ use serde::Deserialize;
 use isolang::Language;
 
 #[derive(Debug, Deserialize)]
+#[serde(untagged)]
+enum TatoebaLanguage {
+    KnownLanguage(Language),
+    UnknownLanguage(String),
+}
+
+#[derive(Debug, Deserialize)]
 struct Sentence {
     tatoeba_id: u32,
-    language: Language,
+    language: TatoebaLanguage,
     text: String,
 }
 
@@ -22,6 +29,9 @@ fn parse_tatoeba() -> Result<(), Box<dyn Error>> {
         // deserialization.
         let sentence: Sentence = result?;
         println!("{:?}", sentence);
+//        if sentence.language == Language::Jpn {
+//            println!("{:?}", sentence);
+//        }
     }
     Ok(())
 }
