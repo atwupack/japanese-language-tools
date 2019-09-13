@@ -1,44 +1,39 @@
-use std::error::Error;
+mod tatoeba;
+
 use std::process;
+use tatoeba::filter_language;
 
-use serde::Deserialize;
-
-use isolang::Language;
-
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-enum TatoebaLanguage {
-    KnownLanguage(Language),
-    UnknownLanguage(String),
-}
-
-#[derive(Debug, Deserialize)]
-struct Sentence {
-    tatoeba_id: u32,
-    language: TatoebaLanguage,
-    text: String,
-}
-
-fn parse_tatoeba() -> Result<(), Box<dyn Error>> {
-    let mut rdr = csv::ReaderBuilder::new()
-        .has_headers(false)
-        .delimiter(b'\t')
-        .from_path("data/sentences.csv")?;
-    for result in rdr.deserialize() {
-        // Notice that we need to provide a type hint for automatic
-        // deserialization.
-        let sentence: Sentence = result?;
-        println!("{:?}", sentence);
-//        if sentence.language == Language::Jpn {
-//            println!("{:?}", sentence);
-//        }
-    }
-    Ok(())
-}
+use clap::{Arg, App, SubCommand};
 
 fn main() {
-    if let Err(err) = parse_tatoeba() {
-        println!("error running example: {}", err);
-        process::exit(1);
+
+    let matches = App::new("JLT command line tool")
+        .version("1.0")
+        .author("André Twupack")
+        .subcommand(SubCommand::with_name("tatoeba-filter")
+            .arg(Arg::with_name("input")
+                .short("i")
+                .takes_value(true)
+            )
+            .arg(Arg::with_name("output")
+                .short("o")
+                .takes_value(true)
+            )
+            .arg(Arg::with_name("language")
+                .short("l")
+                .takes_value(true)
+            )
+        )
+        .get_matches();
+
+    if let Some(matches) = matches.subcommand_matches("tatoeba-filter") {
+        let input = matches.value_of("input").unwrap();
+        let output = matches.value_of("output").unwrap();
+        let language = matches.value_of("language").unwrap();
+
+        if let Err(err) = filter_language(input, output, language) {
+            println!("error running example: {}", err);
+            process::exit(1);
+        }
     }
 }
