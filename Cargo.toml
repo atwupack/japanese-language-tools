@@ -11,3 +11,4 @@ csv = "1.1"
 serde = { version = "1", features = ["derive"] }
 clap = "2"
 postgres = "0.15"
+serde-xml-rs = { version="0.3", default-features = false }

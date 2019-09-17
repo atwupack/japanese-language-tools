@@ -1,4 +1,5 @@
 mod tatoeba;
+mod kanjidic2;
 
 use std::process;
 use tatoeba::filter_language;
