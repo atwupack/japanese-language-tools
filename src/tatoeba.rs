@@ -1,10 +1,11 @@
 use std::error::Error;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
+use postgres::{Connection, TlsMode};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Sentence {
-    tatoeba_id: u32,
+    tatoeba_id: i32,
     language: String,
     text: String,
 }
@@ -46,4 +47,34 @@ pub fn filter_language<I, O>(input: I, output: O, language: &str) -> Result<(), 
 
     wtr.flush()?;
     Ok(())
+}
+
+pub fn import_sentences<I>(input: I) -> Result<(), Box<dyn Error>>
+    where
+        I: AsRef<Path>,
+{
+
+    let conn = Connection::connect("postgres://jlt:jlt@localhost:5432/postgres", TlsMode::None)?;
+    let stmt = conn.prepare("INSERT INTO sentence (tatoeba_id, text) VALUES ($1, $2)")?;
+
+    parse(input, |sentence| {
+        stmt.execute(&[&sentence.tatoeba_id, &sentence.text])?;
+        Ok(())
+    })?;
+
+    //conn.finish()?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_import() {
+        let result = import_sentences("data/senteneces_jpn.csv");
+        if let Err(e) = result {
+            println!("{}", e);
+        }
+    }
 }
